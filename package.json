@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=20.19",
+    "pnpm": ">=10"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -11,9 +16,11 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
+    "ahooks": "^3.10.0",
     "antd": "^6.6.6",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
