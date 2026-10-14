@@ -1,8 +1,11 @@
-import { AUTH_ORIGIN, CLIENT_ID, ISSUER, REDIRECT_URI } from '../config'
+import { CLIENT_ID, REDIRECT_URI } from '../config'
 
 /* ============================== 接口类型定义 ============================== */
 
-/** 登录请求体：POST {issuer}/interaction/{uid}/login */
+/** SSO 接口统一前缀 */
+const SSO_API_BASE = '/api/sso'
+
+/** 登录请求体：POST /api/sso/interaction/{uid}/login */
 export interface LoginPayload {
   username: string
   password: string
@@ -23,7 +26,7 @@ export interface ApiErrorBody {
   retry_after?: number
 }
 
-/** POST {issuer}/token 响应（access_token 10 分钟；refresh_token 14 天，刷新即轮换） */
+/** POST /api/sso/token 响应（access_token 10 分钟；refresh_token 14 天，刷新即轮换） */
 export interface TokenResponse {
   access_token: string
   id_token: string
@@ -98,12 +101,10 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
 
 /**
  * 提交登录凭据（认证中心登录页专用，浏览器需携带会话 cookie）。
- * 对应文档第 2 节第 3 步：POST {auth-origin}/interaction/{uid}/login
- * 注意：交互 API 挂载在认证中心根路径（不在 issuer 的 /oidc 之下），
- * 与后端 src/auth/interaction.ts 的路由注册保持一致。
+ * 对应文档第 2 节第 3 步：POST /api/sso/interaction/{uid}/login
  */
 export function submitLogin(interaction: string, payload: LoginPayload): Promise<LoginResult> {
-  return request<LoginResult>(`${AUTH_ORIGIN}/interaction/${encodeURIComponent(interaction)}/login`, {
+  return request<LoginResult>(`${SSO_API_BASE}/interaction/${encodeURIComponent(interaction)}/login`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -113,10 +114,10 @@ export function submitLogin(interaction: string, payload: LoginPayload): Promise
 
 /**
  * 授权码换令牌（authorization_code + PKCE）。
- * 对应文档第 2 节第 5 步：POST {issuer}/token
+ * 对应文档第 2 节第 5 步：POST /api/sso/token
  */
 export function exchangeCode(code: string, codeVerifier: string): Promise<TokenResponse> {
-  return request<TokenResponse>(`${ISSUER}/token`, {
+  return request<TokenResponse>(`${SSO_API_BASE}/token`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -135,7 +136,7 @@ export function exchangeCode(code: string, codeVerifier: string): Promise<TokenR
  * 必须用返回值覆盖本地存储，绝不要重放旧令牌（会触发泄露检测导致整条授权作废）。
  */
 export function refreshToken(refreshTokenValue: string): Promise<TokenResponse> {
-  return request<TokenResponse>(`${ISSUER}/token`, {
+  return request<TokenResponse>(`${SSO_API_BASE}/token`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
