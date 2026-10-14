@@ -1,3 +1,5 @@
+import { sha256 } from '@noble/hashes/sha2.js'
+
 /**
  * PKCE（RFC 7636）：code_verifier 43–128 字符，
  * code_challenge = base64url(sha256(code_verifier))，S256。
@@ -19,9 +21,8 @@ export function createCodeVerifier(): string {
 }
 
 /** 计算 S256 code_challenge */
-export async function createCodeChallenge(codeVerifier: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(codeVerifier))
-  return base64UrlEncode(new Uint8Array(digest))
+export function createCodeChallenge(codeVerifier: string): string {
+  return base64UrlEncode(sha256(new TextEncoder().encode(codeVerifier)))
 }
 
 /** 随机 state（16 字节 base64url），用于回跳防伪 */

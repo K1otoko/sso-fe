@@ -4,6 +4,7 @@ import { CLIENT_ID, REDIRECT_URI } from '../config'
 
 /** SSO 接口统一前缀 */
 const SSO_API_BASE = '/api/sso'
+const OIDC_TOKEN_ENDPOINT = `${SSO_API_BASE}/oidc/token`
 
 /** 登录请求体：POST /api/sso/interaction/{uid}/login */
 export interface LoginPayload {
@@ -26,7 +27,7 @@ export interface ApiErrorBody {
   retry_after?: number
 }
 
-/** POST /api/sso/token 响应（access_token 10 分钟；refresh_token 14 天，刷新即轮换） */
+/** POST /api/sso/oidc/token 响应（access_token 10 分钟；refresh_token 14 天，刷新即轮换） */
 export interface TokenResponse {
   access_token: string
   id_token: string
@@ -114,10 +115,10 @@ export function submitLogin(interaction: string, payload: LoginPayload): Promise
 
 /**
  * 授权码换令牌（authorization_code + PKCE）。
- * 对应文档第 2 节第 5 步：POST /api/sso/token
+ * 对应文档第 2 节第 5 步：POST /api/sso/oidc/token
  */
 export function exchangeCode(code: string, codeVerifier: string): Promise<TokenResponse> {
-  return request<TokenResponse>(`${SSO_API_BASE}/token`, {
+  return request<TokenResponse>(OIDC_TOKEN_ENDPOINT, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -136,7 +137,7 @@ export function exchangeCode(code: string, codeVerifier: string): Promise<TokenR
  * 必须用返回值覆盖本地存储，绝不要重放旧令牌（会触发泄露检测导致整条授权作废）。
  */
 export function refreshToken(refreshTokenValue: string): Promise<TokenResponse> {
-  return request<TokenResponse>(`${SSO_API_BASE}/token`, {
+  return request<TokenResponse>(OIDC_TOKEN_ENDPOINT, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
